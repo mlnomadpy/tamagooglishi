@@ -47,4 +47,17 @@ export class Sprite {
             x - width / 2, y - height / 2, width, height
         );
     }
+
+    drawFrame(ctx, x, y, width, height, row, col) {
+        if (!this.image) return;
+
+        const srcX = col * this.frameWidth;
+        const srcY = row * this.frameHeight;
+
+        ctx.drawImage(
+            this.image,
+            srcX, srcY, this.frameWidth, this.frameHeight,
+            x - width / 2, y - height / 2, width, height
+        );
+    }
 }

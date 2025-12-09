@@ -1,23 +1,34 @@
 import { Entity } from './Entity.js';
 import { Sprite } from '../core/Sprite.js';
+import { AnimationController } from '../core/AnimationController.js';
+import { AudioSystem } from '../core/AudioSystem.js';
 
 export class Pet extends Entity {
     constructor(x, y, world, spriteImage) {
         super(x, y, 40, world); // Radius 40 for now
 
+        this.audio = new AudioSystem();
+
         // Sprite Init
         const frameSize = 1030 / 6;
+        // Keep Sprite for drawing utility? Or just use it directly.
+        // Let's keep Sprite but simplify it or just configure it dynamically.
         this.sprite = new Sprite({
             image: spriteImage,
             frameWidth: frameSize,
             frameHeight: frameSize,
-            frameSpeed: 200,
-            rows: {
-                'IDLE': { row: 0, frames: 6 },
-                'EATING': { row: 1, frames: 6 },
-                'SLEEPING': { row: 2, frames: 6 },
-                'PLAYING': { row: 3, frames: 6 }
-            }
+            rows: {} // We'll manually control frame index now
+        });
+
+        this.animator = new AnimationController({
+            states: {
+                'IDLE': { row: 0, frames: 6, loop: true },
+                'EATING': { row: 1, frames: 6, loop: true }, // Loop eating while state active
+                'SLEEPING': { row: 2, frames: 6, loop: true },
+                'PLAYING': { row: 3, frames: 6, loop: true },
+                'DRAGGED': { row: 3, frames: 6, loop: true } // Reuse play for drag?
+            },
+            default: 'IDLE'
         });
 
         this.stats = {
@@ -47,10 +58,27 @@ export class Pet extends Entity {
 
         this.updateState(delta);
 
-        // Sync Sprite
-        if (this.sprite) {
-            this.sprite.setAnimation(this.state);
-            this.sprite.update(delta);
+        // Sync Animator
+        if (this.animator && this.sprite) {
+            this.animator.transition(this.state);
+            this.animator.update(delta);
+
+            // Manual sprite override
+            const frame = this.animator.getCurrentFrame();
+            // We need to inject this into sprite? 
+            // Sprite.js uses internal specific logic.
+            // Let's hack Sprite.js to allow manual override or just set its properties.
+            this.sprite.frameIndex = frame.col;
+            this.sprite.currentAnimation = this.state;
+            // Wait, Sprite.js relies on its own Rows config.
+            // We empty rows in constructor so we need to set row index manually?
+            // Sprite.draw uses `this.rows[this.currentAnimation]`.
+            // Let's just create a dummy "row" object for drawing if needed or update Sprite.js
+            // Simplest: Update Sprite.js to allow `drawFrame(row, col)`.
+            // OR: Just use the Sprite logic IF it matches.
+            // Actually, we can just start `sprite.setAnimation` if we didn't use `AnimationController`. 
+            // The `AnimationController` gives us `onComplete` etc.
+            // Let's stick to `animator` logic.
         }
     }
 
@@ -81,7 +109,8 @@ export class Pet extends Entity {
     feed() {
         this.stats.hunger = Math.max(0, this.stats.hunger - 20);
         this.state = 'EATING';
-        this.stateTimer = 1.0; // 1 second
+        this.stateTimer = 1.0;
+        if (this.audio) this.audio.play('FEED');
     }
 
     play() {
@@ -89,10 +118,12 @@ export class Pet extends Entity {
         this.stats.energy = Math.max(0, this.stats.energy - 10);
         this.state = 'PLAYING';
         this.stateTimer = 1.0;
+        if (this.audio) this.audio.play('PLAY');
     }
 
     sleep() {
         this.state = 'SLEEPING';
+        if (this.audio) this.audio.play('SLEEP');
     }
 
     startDrag() {
@@ -110,10 +141,9 @@ export class Pet extends Entity {
         // Debug circle (optional, maybe comment out or keep for collision debug)
         // super.draw(ctx); 
 
-        if (this.sprite) {
-            // Draw sprite scaled down
-            // Frame is 256x256, draw at 128x128
-            this.sprite.draw(ctx, pos.x, pos.y, 128, 128);
+        if (this.sprite && this.animator) {
+            const frame = this.animator.getCurrentFrame();
+            this.sprite.drawFrame(ctx, pos.x, pos.y, 128, 128, frame.row, frame.col);
         }
     }
     serialize() {
