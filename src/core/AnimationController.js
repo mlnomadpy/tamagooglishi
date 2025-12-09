@@ -32,7 +32,7 @@ export class AnimationController {
         this.timer += delta;
         const speed = stateConfig.speed || 200;
 
-        if (this.timer >= speed) {
+        while (this.timer >= speed) {
             this.timer -= speed;
 
             // Advance frame
@@ -47,6 +47,7 @@ export class AnimationController {
                     if (this.onComplete) {
                         this.onComplete(this.currentState);
                     }
+                    return;
                 }
             }
         }

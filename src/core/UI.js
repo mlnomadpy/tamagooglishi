@@ -13,9 +13,18 @@ export class UI {
         this.btnPlay = document.getElementById('btn-play');
 
         // Bind events
-        if (this.btnFeed) this.btnFeed.onclick = () => this.pet.feed();
-        if (this.btnSleep) this.btnSleep.onclick = () => this.pet.sleep();
-        if (this.btnPlay) this.btnPlay.onclick = () => this.pet.play();
+        const bindAction = (btn, action) => {
+            if (!btn) return;
+            btn.onclick = () => action();
+            btn.ontouchstart = (e) => {
+                e.preventDefault(); // Prevent ghost clicks
+                action();
+            };
+        };
+
+        bindAction(this.btnFeed, () => this.pet.feed());
+        bindAction(this.btnSleep, () => this.pet.sleep());
+        bindAction(this.btnPlay, () => this.pet.play());
     }
 
     update() {
