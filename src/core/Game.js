@@ -59,6 +59,10 @@ export class Game {
         if (typeof window !== 'undefined') {
             this.canvas.width = window.innerWidth;
             this.canvas.height = window.innerHeight;
+
+            if (this.physics) {
+                this.physics.resize(this.canvas.width, this.canvas.height);
+            }
         }
     }
 
