@@ -4,23 +4,43 @@ import Matter from 'matter-js';
 
 // Mock Matter.js to avoid canvas/browser dependencies in unit tests if possible, 
 // but Matter.js core can run in Node. We just need to mock the Canvas for Mouse.create
-vi.mock('matter-js', async () => {
-    const actual = await vi.importActual('matter-js');
+vi.mock('matter-js', () => {
+    // simplified mock without importActual to ensure full control over the default export
+    const MockEngine = {
+        create: vi.fn(() => ({
+            world: {
+                gravity: { x: 0, y: 1 },
+                bodies: []
+            }
+        })),
+        update: vi.fn(),
+    };
+    const MockMouse = {
+        create: vi.fn(() => ({})),
+    };
+    const MockMouseConstraint = {
+        create: vi.fn(() => ({})),
+    };
+    const MockBodies = {
+        rectangle: vi.fn(() => ({ isStatic: false })),
+        circle: vi.fn(() => ({ isStatic: false })),
+    };
+    const MockComposite = {
+        add: vi.fn(),
+    };
+
     return {
-        ...actual,
-        Engine: {
-            ...actual.Engine,
-            create: vi.fn(() => ({
-                world: { gravity: { x: 0, y: 1 } },
-                // Add other engine properties as needed
-            })),
-            update: vi.fn(),
-        },
-        Mouse: {
-            create: vi.fn(() => ({})),
-        },
-        MouseConstraint: {
-            create: vi.fn(() => ({})),
+        Engine: MockEngine,
+        Mouse: MockMouse,
+        MouseConstraint: MockMouseConstraint,
+        Bodies: MockBodies,
+        Composite: MockComposite,
+        default: {
+            Engine: MockEngine,
+            Mouse: MockMouse,
+            MouseConstraint: MockMouseConstraint,
+            Bodies: MockBodies,
+            Composite: MockComposite,
         }
     };
 });

@@ -1,0 +1,43 @@
+
+[1m[46m RUN [49m[22m [36mv4.0.15 [39m[90mC:/Users/tahab/Documents/github/tamagooglishi[39m
+
+ [31mΓ¥»[39m src/core/__tests__/Physics.test.js [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 12[2mms[22m[39m
+[31m     [31m├ù[31m should initialize Matter.js Engine[39m[32m 9[2mms[22m[39m
+[31m     [31m├ù[31m should create boundaries/walls[39m[32m 1[2mms[22m[39m
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/core/__tests__/Physics.test.js > Physics System > should initialize Matter.js Engine
+TypeError: mouse.element.getAttribute is not a function
+ Γ¥» Object.Mouse.create node_modules/matter-js/build/matter.js:5720:51
+ Γ¥» new Physics src/core/Physics.js:9:35
+      7| 
+      8|         // Add mouse control
+      9|         this.mouse = Matter.Mouse.create(canvas);
+       |                                   ^
+     10|         this.mouseConstraint = Matter.MouseConstraint.create(this.engiΓÇª
+     11|             mouse: this.mouse,
+ Γ¥» src/core/__tests__/Physics.test.js:31:25
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  src/core/__tests__/Physics.test.js > Physics System > should create boundaries/walls
+TypeError: mouse.element.getAttribute is not a function
+ Γ¥» Object.Mouse.create node_modules/matter-js/build/matter.js:5720:51
+ Γ¥» new Physics src/core/Physics.js:9:35
+      7| 
+      8|         // Add mouse control
+      9|         this.mouse = Matter.Mouse.create(canvas);
+       |                                   ^
+     10|         this.mouseConstraint = Matter.MouseConstraint.create(this.engiΓÇª
+     11|             mouse: this.mouse,
+ Γ¥» src/core/__tests__/Physics.test.js:44:25
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m   Start at [22m 14:55:42
+[2m   Duration [22m 358ms[2m (transform 54ms, setup 0ms, import 111ms, tests 12ms, environment 0ms)[22m
+

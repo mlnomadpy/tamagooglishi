@@ -1,5 +1,5 @@
 import { Physics } from './Physics.js';
-import { Entity } from '../entities/Entity.js';
+import { Pet } from '../entities/Pet.js';
 
 export class Game {
     constructor() {
@@ -24,7 +24,7 @@ export class Game {
         const startX = typeof window !== 'undefined' ? window.innerWidth / 2 : 400;
         const startY = typeof window !== 'undefined' ? window.innerHeight / 2 : 300;
 
-        this.pet = new Entity(startX, startY, 40, this.physics.world);
+        this.pet = new Pet(startX, startY, this.physics.world);
 
         this.lastTime = 0;
         this.loop = this.loop.bind(this);
@@ -53,6 +53,9 @@ export class Game {
 
     update(delta) {
         this.physics.update(delta);
+        if (this.pet) {
+            this.pet.update(delta);
+        }
     }
 
     draw() {
