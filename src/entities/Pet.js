@@ -6,16 +6,17 @@ export class Pet extends Entity {
         super(x, y, 40, world); // Radius 40 for now
 
         // Sprite Init
+        const frameSize = 1030 / 6;
         this.sprite = new Sprite({
             image: spriteImage,
-            frameWidth: 256, // Assumed 1024x1024 / 4 = 256
-            frameHeight: 256,
+            frameWidth: frameSize,
+            frameHeight: frameSize,
             frameSpeed: 200,
             rows: {
-                'IDLE': { row: 0, frames: 4 },
-                'EATING': { row: 1, frames: 4 },
-                'SLEEPING': { row: 2, frames: 4 },
-                'PLAYING': { row: 3, frames: 4 }
+                'IDLE': { row: 0, frames: 6 },
+                'EATING': { row: 1, frames: 6 },
+                'SLEEPING': { row: 2, frames: 6 },
+                'PLAYING': { row: 3, frames: 6 }
             }
         });
 
