@@ -1,2 +1,3 @@
-console.log("Tamagooglishi starting...");
-// Initialize game here later
+import { Game } from './core/Game.js';
+
+window.game = new Game();
