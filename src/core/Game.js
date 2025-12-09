@@ -95,6 +95,20 @@ export class Game {
 
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+        // Draw Game Background/Frame
+        const gameWidth = 400;
+        const gameHeight = 500;
+        const cx = this.canvas.width / 2;
+        const cy = this.canvas.height / 2;
+
+        this.ctx.fillStyle = '#fff';
+        this.ctx.strokeStyle = '#333';
+        this.ctx.lineWidth = 4;
+        this.ctx.beginPath();
+        this.ctx.rect(cx - gameWidth / 2, cy - gameHeight / 2, gameWidth, gameHeight);
+        this.ctx.fill();
+        this.ctx.stroke();
+
         // Render pet
         this.pet.draw(this.ctx);
     }

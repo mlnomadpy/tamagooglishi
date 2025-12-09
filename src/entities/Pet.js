@@ -8,8 +8,8 @@ export class Pet extends Entity {
         // Sprite Init
         this.sprite = new Sprite({
             image: spriteImage,
-            frameWidth: 32, // Assuming 32x32 for now based on generation
-            frameHeight: 32,
+            frameWidth: 256, // Assumed 1024x1024 / 4 = 256
+            frameHeight: 256,
             frameSpeed: 200,
             rows: {
                 'IDLE': { row: 0, frames: 4 },
@@ -110,8 +110,9 @@ export class Pet extends Entity {
         // super.draw(ctx); 
 
         if (this.sprite) {
-            // Draw sprite 2x larger for pixel art look? Let's try 64x64
-            this.sprite.draw(ctx, pos.x, pos.y, 64, 64);
+            // Draw sprite scaled down
+            // Frame is 256x256, draw at 128x128
+            this.sprite.draw(ctx, pos.x, pos.y, 128, 128);
         }
     }
     serialize() {

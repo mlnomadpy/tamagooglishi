@@ -18,17 +18,28 @@ export class Physics {
         });
 
         // Basic walls
-        // Use window dimensions if available, otherwise defaults (useful for testing)
-        const width = (typeof window !== 'undefined') ? window.innerWidth : 800;
-        const height = (typeof window !== 'undefined') ? window.innerHeight : 600;
+        // Tamagotchi Screen Dimensions (Centered)
+        const screenWidth = (typeof window !== 'undefined') ? window.innerWidth : 800;
+        const screenHeight = (typeof window !== 'undefined') ? window.innerHeight : 600;
+
+        const gameWidth = 400;
+        const gameHeight = 500;
+        const cx = screenWidth / 2;
+        const cy = screenHeight / 2;
+
         const wallThickness = 100;
+        const wallOptions = { isStatic: true, render: { fillStyle: '#333' } };
 
-        const ground = Matter.Bodies.rectangle(width / 2, height + wallThickness / 2 - 10, width, wallThickness, { isStatic: true });
-        const leftWall = Matter.Bodies.rectangle(0 - wallThickness / 2, height / 2, wallThickness, height, { isStatic: true });
-        const rightWall = Matter.Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height, { isStatic: true });
-        const ceiling = Matter.Bodies.rectangle(width / 2, -wallThickness * 2, width, wallThickness, { isStatic: true });
-
-        Matter.Composite.add(this.world, [ground, leftWall, rightWall, ceiling, this.mouseConstraint]);
+        Matter.Composite.add(this.world, [
+            // Top
+            Matter.Bodies.rectangle(cx, cy - gameHeight / 2 - wallThickness / 2, gameWidth + wallThickness * 2, wallThickness, wallOptions),
+            // Bottom
+            Matter.Bodies.rectangle(cx, cy + gameHeight / 2 + wallThickness / 2, gameWidth + wallThickness * 2, wallThickness, wallOptions),
+            // Left
+            Matter.Bodies.rectangle(cx - gameWidth / 2 - wallThickness / 2, cy, wallThickness, gameHeight + wallThickness * 2, wallOptions),
+            // Right
+            Matter.Bodies.rectangle(cx + gameWidth / 2 + wallThickness / 2, cy, wallThickness, gameHeight + wallThickness * 2, wallOptions)
+        ]);
     }
 
     update(delta) {
