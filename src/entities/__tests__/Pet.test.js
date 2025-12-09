@@ -24,6 +24,17 @@ vi.mock('matter-js', () => {
     };
 });
 
+vi.mock('../core/Sprite.js', () => {
+    return {
+        Sprite: vi.fn(() => ({
+            update: vi.fn(),
+            setAnimation: vi.fn(),
+            draw: vi.fn()
+        }))
+    };
+});
+
+
 
 describe('Pet Entity', () => {
     it('should initialize with default stats', () => {
@@ -143,5 +154,21 @@ describe('Pet Entity', () => {
 
         pet.endDrag();
         expect(pet.state).toBe('IDLE');
+    });
+
+    it('should serialize and deserialize', () => {
+        const mockWorld = {};
+        const pet = new Pet(100, 100, mockWorld);
+        pet.stats.hunger = 50;
+        pet.state = 'SLEEPING';
+
+        const data = pet.serialize();
+        expect(data.stats.hunger).toBe(50);
+        expect(data.state).toBe('SLEEPING');
+
+        const pet2 = new Pet(100, 100, mockWorld);
+        pet2.deserialize(data);
+        expect(pet2.stats.hunger).toBe(50);
+        expect(pet2.state).toBe('SLEEPING');
     });
 });

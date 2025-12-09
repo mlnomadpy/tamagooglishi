@@ -114,4 +114,18 @@ export class Pet extends Entity {
             this.sprite.draw(ctx, pos.x, pos.y, 64, 64);
         }
     }
+    serialize() {
+        return {
+            stats: { ...this.stats },
+            state: this.state,
+            age: this.age
+        };
+    }
+
+    deserialize(data) {
+        if (!data) return;
+        if (data.stats) this.stats = { ...data.stats };
+        if (data.state) this.state = data.state;
+        if (data.age) this.age = data.age;
+    }
 }

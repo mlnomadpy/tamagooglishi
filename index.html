@@ -1,17 +1,31 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tamagooglishi</title>
-    <link rel="stylesheet" href="./src/style.css">
-  </head>
-  <body>
-    <div id="app">
-      <div id="ui-layer"></div>
-      <canvas id="game-canvas"></canvas>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tamagooglishi</title>
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+
+<body>
+  <div id="app">
+    <div id="ui-layer">
+      <div id="stats-panel">
+        <div class="stat-row">Hunger: <span id="stat-hunger">0</span>%</div>
+        <div class="stat-row">Energy: <span id="stat-energy">100</span>%</div>
+        <div class="stat-row">Health: <span id="stat-happiness">100</span>%</div>
+      </div>
+      <div id="actions-panel">
+        <button id="btn-feed" class="action-btn">FEED</button>
+        <button id="btn-sleep" class="action-btn">SLEEP</button>
+        <button id="btn-play" class="action-btn">PLAY</button>
+      </div>
     </div>
-    <script type="module" src="./src/main.js"></script>
-  </body>
+    <canvas id="game-canvas"></canvas>
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+
 </html>

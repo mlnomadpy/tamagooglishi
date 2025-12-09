@@ -1,5 +1,6 @@
 import { Physics } from './Physics.js';
 import { Pet } from '../entities/Pet.js';
+import { UI } from './UI.js';
 import Matter from 'matter-js';
 
 export class Game {
@@ -20,6 +21,7 @@ export class Game {
         }
 
         this.physics = new Physics(this.canvas);
+        this.ui = new UI(this);
 
         // Load assets
         const spriteImage = new Image();
@@ -30,6 +32,7 @@ export class Game {
         const startY = typeof window !== 'undefined' ? window.innerHeight / 2 : 300;
 
         this.pet = new Pet(startX, startY, this.physics.world, spriteImage);
+        this.load(); // Load save data if available
 
         // Drag & Drop Events
         Matter.Events.on(this.physics.mouseConstraint, 'startdrag', (event) => {
@@ -74,6 +77,17 @@ export class Game {
         if (this.pet) {
             this.pet.update(delta);
         }
+        if (this.ui) {
+            this.ui.update();
+        }
+
+        // Auto-save every 5 seconds
+        this.saveAccumulator = (this.saveAccumulator || 0) + delta;
+        if (this.saveAccumulator > 5000) {
+            this.save();
+            this.saveAccumulator = 0;
+            // console.log("Game Saved");
+        }
     }
 
     draw() {
@@ -83,5 +97,27 @@ export class Game {
 
         // Render pet
         this.pet.draw(this.ctx);
+    }
+    save() {
+        if (!this.pet) return;
+        const data = this.pet.serialize();
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('tamagooglishi_save', JSON.stringify(data));
+        }
+    }
+
+    load() {
+        if (!this.pet) return;
+        if (typeof localStorage !== 'undefined') {
+            const raw = localStorage.getItem('tamagooglishi_save');
+            if (raw) {
+                try {
+                    const data = JSON.parse(raw);
+                    this.pet.deserialize(data);
+                } catch (e) {
+                    console.error("Failed to load save:", e);
+                }
+            }
+        }
     }
 }
