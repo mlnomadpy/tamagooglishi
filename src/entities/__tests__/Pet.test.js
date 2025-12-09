@@ -125,4 +125,23 @@ describe('Pet Entity', () => {
         pet.update(100);
         expect(pet.stats.energy).toBeGreaterThanOrEqual(0);
     });
+
+    it('should enter DRAGGED state', () => {
+        const mockWorld = {};
+        const pet = new Pet(100, 100, mockWorld);
+
+        pet.startDrag();
+        expect(pet.state).toBe('DRAGGED');
+    });
+
+    it('should return to IDLE after drag ends', () => {
+        const mockWorld = {};
+        const pet = new Pet(100, 100, mockWorld);
+
+        pet.startDrag();
+        expect(pet.state).toBe('DRAGGED');
+
+        pet.endDrag();
+        expect(pet.state).toBe('IDLE');
+    });
 });

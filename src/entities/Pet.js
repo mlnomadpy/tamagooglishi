@@ -1,8 +1,23 @@
 import { Entity } from './Entity.js';
+import { Sprite } from '../core/Sprite.js';
 
 export class Pet extends Entity {
-    constructor(x, y, world) {
+    constructor(x, y, world, spriteImage) {
         super(x, y, 40, world); // Radius 40 for now
+
+        // Sprite Init
+        this.sprite = new Sprite({
+            image: spriteImage,
+            frameWidth: 32, // Assuming 32x32 for now based on generation
+            frameHeight: 32,
+            frameSpeed: 200,
+            rows: {
+                'IDLE': { row: 0, frames: 4 },
+                'EATING': { row: 1, frames: 4 },
+                'SLEEPING': { row: 2, frames: 4 },
+                'PLAYING': { row: 3, frames: 4 }
+            }
+        });
 
         this.stats = {
             hunger: 0,      // 0 = full, 100 = starving
@@ -30,6 +45,12 @@ export class Pet extends Entity {
         this.stats.happiness = Math.min(100, Math.max(0, this.stats.happiness - (3 * seconds)));
 
         this.updateState(delta);
+
+        // Sync Sprite
+        if (this.sprite) {
+            this.sprite.setAnimation(this.state);
+            this.sprite.update(delta);
+        }
     }
 
     updateState(delta) {
@@ -47,10 +68,12 @@ export class Pet extends Entity {
             // Recover energy faster than it decays
             this.stats.energy = Math.min(100, this.stats.energy + (10 * seconds));
 
-            // Auto wakeup if full
             if (this.stats.energy >= 100) {
                 this.state = 'IDLE';
             }
+        } else if (this.state === 'DRAGGED') {
+            // Pause decay/recovery while dragged?
+            // For now, simple pause.
         }
     }
 
@@ -69,5 +92,26 @@ export class Pet extends Entity {
 
     sleep() {
         this.state = 'SLEEPING';
+    }
+
+    startDrag() {
+        this.state = 'DRAGGED';
+    }
+
+    endDrag() {
+        this.state = 'IDLE';
+    }
+
+    draw(ctx) {
+        if (!this.body) return;
+        const pos = this.body.position;
+
+        // Debug circle (optional, maybe comment out or keep for collision debug)
+        // super.draw(ctx); 
+
+        if (this.sprite) {
+            // Draw sprite 2x larger for pixel art look? Let's try 64x64
+            this.sprite.draw(ctx, pos.x, pos.y, 64, 64);
+        }
     }
 }

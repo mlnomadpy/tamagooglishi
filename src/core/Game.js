@@ -1,5 +1,6 @@
 import { Physics } from './Physics.js';
 import { Pet } from '../entities/Pet.js';
+import Matter from 'matter-js';
 
 export class Game {
     constructor() {
@@ -20,11 +21,28 @@ export class Game {
 
         this.physics = new Physics(this.canvas);
 
+        // Load assets
+        const spriteImage = new Image();
+        spriteImage.src = '/src/assets/sprites.png';
+
         // Create a test entity (The Pet)
         const startX = typeof window !== 'undefined' ? window.innerWidth / 2 : 400;
         const startY = typeof window !== 'undefined' ? window.innerHeight / 2 : 300;
 
-        this.pet = new Pet(startX, startY, this.physics.world);
+        this.pet = new Pet(startX, startY, this.physics.world, spriteImage);
+
+        // Drag & Drop Events
+        Matter.Events.on(this.physics.mouseConstraint, 'startdrag', (event) => {
+            if (event.body === this.pet.body) {
+                this.pet.startDrag();
+            }
+        });
+
+        Matter.Events.on(this.physics.mouseConstraint, 'enddrag', (event) => {
+            if (event.body === this.pet.body) {
+                this.pet.endDrag();
+            }
+        });
 
         this.lastTime = 0;
         this.loop = this.loop.bind(this);
