@@ -4,9 +4,10 @@ import { AnimationController } from '../core/AnimationController.js';
 import { AudioSystem } from '../core/AudioSystem.js';
 
 export class Pet extends Entity {
-    constructor(x, y, world, spriteImage) {
+    constructor(x, y, world, spriteImage, onPoop) {
         super(x, y, 40, world); // Radius 40 for now
 
+        this.onPoop = onPoop;
         this.audio = new AudioSystem();
 
         // Sprite Init
@@ -26,7 +27,8 @@ export class Pet extends Entity {
                 'EATING': { row: 1, frames: 6, loop: true }, // Loop eating while state active
                 'SLEEPING': { row: 2, frames: 6, loop: true },
                 'PLAYING': { row: 3, frames: 6, loop: true },
-                'DRAGGED': { row: 3, frames: 6, loop: true } // Reuse play for drag?
+                'DRAGGED': { row: 3, frames: 6, loop: true },
+                'DEAD': { row: 2, frames: 1, loop: true } // Reuse sleep row, static frame
             },
             default: 'IDLE'
         });
@@ -43,18 +45,41 @@ export class Pet extends Entity {
 
         // Timer for states
         this.stateTimer = 0;
+
+        // Poop Timer (random start 10-30s)
+        this.poopTimer = 10 + Math.random() * 20;
     }
 
     update(delta) {
+        if (this.state === 'DEAD') {
+            // No updates if dead
+            if (this.animator && this.sprite) {
+                this.animator.transition('DEAD');
+                this.animator.update(delta);
+            }
+            return;
+        }
+
         // Decay stats
-        // delta is in ms. 
-        // 1 sec = 1000ms.
-        // Want hunger to go up by say 5 per sec => 5 * (delta/1000)
         const seconds = delta / 1000;
 
         this.stats.hunger = Math.min(100, Math.max(0, this.stats.hunger + (5 * seconds)));
         this.stats.energy = Math.min(100, Math.max(0, this.stats.energy - (2 * seconds)));
         this.stats.happiness = Math.min(100, Math.max(0, this.stats.happiness - (3 * seconds)));
+
+        // Check Death
+        if (this.stats.hunger >= 100 || this.stats.energy <= 0 || this.stats.happiness <= 0) {
+            this.die();
+        }
+
+        // Poop Logic
+        if (this.state !== 'SLEEPING') {
+            this.poopTimer -= seconds;
+            if (this.poopTimer <= 0) {
+                this.makePoop();
+                this.poopTimer = 30 + Math.random() * 30; // Reset to 30-60s
+            }
+        }
 
         this.updateState(delta);
 
@@ -65,20 +90,8 @@ export class Pet extends Entity {
 
             // Manual sprite override
             const frame = this.animator.getCurrentFrame();
-            // We need to inject this into sprite? 
-            // Sprite.js uses internal specific logic.
-            // Let's hack Sprite.js to allow manual override or just set its properties.
             this.sprite.frameIndex = frame.col;
             this.sprite.currentAnimation = this.state;
-            // Wait, Sprite.js relies on its own Rows config.
-            // We empty rows in constructor so we need to set row index manually?
-            // Sprite.draw uses `this.rows[this.currentAnimation]`.
-            // Let's just create a dummy "row" object for drawing if needed or update Sprite.js
-            // Simplest: Update Sprite.js to allow `drawFrame(row, col)`.
-            // OR: Just use the Sprite logic IF it matches.
-            // Actually, we can just start `sprite.setAnimation` if we didn't use `AnimationController`. 
-            // The `AnimationController` gives us `onComplete` etc.
-            // Let's stick to `animator` logic.
         }
     }
 
@@ -100,13 +113,17 @@ export class Pet extends Entity {
             if (this.stats.energy >= 100) {
                 this.state = 'IDLE';
             }
-        } else if (this.state === 'DRAGGED') {
-            // Pause decay/recovery while dragged?
-            // For now, simple pause.
         }
     }
 
+    die() {
+        if (this.state === 'DEAD') return;
+        this.state = 'DEAD';
+        if (this.audio) this.audio.play('DIE');
+    }
+
     feed() {
+        if (this.state === 'DEAD') return;
         this.stats.hunger = Math.max(0, this.stats.hunger - 20);
         this.state = 'EATING';
         this.stateTimer = 1.0;
@@ -114,6 +131,7 @@ export class Pet extends Entity {
     }
 
     play() {
+        if (this.state === 'DEAD') return;
         this.stats.happiness = Math.min(100, this.stats.happiness + 20);
         this.stats.energy = Math.max(0, this.stats.energy - 10);
         this.state = 'PLAYING';
@@ -122,24 +140,30 @@ export class Pet extends Entity {
     }
 
     sleep() {
+        if (this.state === 'DEAD') return;
         this.state = 'SLEEPING';
         if (this.audio) this.audio.play('SLEEP');
     }
 
+    makePoop() {
+        if (this.onPoop) {
+            this.onPoop(this.body.position.x, this.body.position.y);
+        }
+    }
+
     startDrag() {
+        if (this.state === 'DEAD') return;
         this.state = 'DRAGGED';
     }
 
     endDrag() {
+        if (this.state === 'DEAD') return;
         this.state = 'IDLE';
     }
 
     draw(ctx) {
         if (!this.body) return;
         const pos = this.body.position;
-
-        // Debug circle (optional, maybe comment out or keep for collision debug)
-        // super.draw(ctx); 
 
         if (this.sprite && this.animator) {
             const frame = this.animator.getCurrentFrame();

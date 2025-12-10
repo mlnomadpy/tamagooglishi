@@ -1,5 +1,6 @@
 import { Physics } from "./Physics.js";
 import { Pet } from "../entities/Pet.js";
+import { Poop } from "../entities/Poop.js";
 import { UI } from "./UI.js";
 import Matter from "matter-js";
 
@@ -21,7 +22,7 @@ export class Game {
     }
 
     this.physics = new Physics(this.canvas);
-    this.ui = new UI(this);
+    this.poops = [];
 
     // Load assets
     const spriteImage = new Image();
@@ -31,7 +32,11 @@ export class Game {
     const startX = typeof window !== "undefined" ? window.innerWidth / 2 : 400;
     const startY = typeof window !== "undefined" ? window.innerHeight / 2 : 300;
 
-    this.pet = new Pet(startX, startY, this.physics.world, spriteImage);
+    this.pet = new Pet(startX, startY, this.physics.world, spriteImage, (x, y) => this.spawnPoop(x, y));
+
+    // UI needs pet to be initialized
+    this.ui = new UI(this);
+
     this.load(); // Load save data if available
 
     // Drag & Drop Events
@@ -92,6 +97,13 @@ export class Game {
       this.saveAccumulator = 0;
       // console.log("Game Saved");
     }
+
+    // Hygiene Decay due to poop
+    if (this.poops.length > 0) {
+      // Decay 5 per poop per second?
+      const seconds = delta / 1000;
+      this.pet.stats.hygiene = Math.max(0, this.pet.stats.hygiene - (2 * this.poops.length * seconds));
+    }
   }
 
   draw() {
@@ -118,6 +130,9 @@ export class Game {
     this.ctx.fill();
     this.ctx.stroke();
 
+    // Render poops
+    this.poops.forEach(p => p.draw(this.ctx));
+
     // Render pet
     this.pet.draw(this.ctx);
   }
@@ -127,6 +142,19 @@ export class Game {
     if (typeof localStorage !== "undefined") {
       localStorage.setItem("tamagooglishi_save", JSON.stringify(data));
     }
+  }
+
+  spawnPoop(x, y) {
+    const poop = new Poop(x, y, this.physics.world);
+    this.poops.push(poop);
+  }
+
+  cleanPoops() {
+    this.poops.forEach(p => {
+      Matter.World.remove(this.physics.world, p.body);
+    });
+    this.poops = [];
+    this.pet.stats.hygiene = 100; // Reset hygiene
   }
 
   load() {

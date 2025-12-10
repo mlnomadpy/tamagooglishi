@@ -28,15 +28,41 @@ vi.mock('../core/Sprite.js', () => {
     return {
         Sprite: vi.fn(() => ({
             update: vi.fn(),
+            draw: vi.fn(),
             setAnimation: vi.fn(),
-            draw: vi.fn()
+            drawFrame: vi.fn()
         }))
     };
 });
 
+vi.mock('../core/AnimationController.js', () => {
+    return {
+        AnimationController: vi.fn(() => ({
+            update: vi.fn(),
+            transition: vi.fn(),
+            getCurrentFrame: vi.fn(() => ({ row: 0, col: 0 }))
+        }))
+    };
+});
 
+vi.mock('../core/AudioSystem.js', () => {
+    return {
+        AudioSystem: vi.fn(() => ({
+            play: vi.fn()
+        }))
+    };
+});
 
 describe('Pet Entity', () => {
+    it('should poop and trigger callback', () => {
+        const mockWorld = {};
+        const onPoop = vi.fn();
+        const pet = new Pet(100, 100, mockWorld, null, onPoop);
+
+        pet.makePoop();
+        expect(onPoop).toHaveBeenCalled();
+    });
+
     it('should initialize with default stats', () => {
         // Mock world
         const mockWorld = { gravity: { x: 0, y: 1 } };
