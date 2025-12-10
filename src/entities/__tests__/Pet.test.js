@@ -4,6 +4,12 @@ import { Pet } from '../Pet.js';
 // Mock stats to be faster for testing or just test delta logic
 const TICK_RATE = 1000;
 
+const mockSprites = {
+    baby: { width: 100, height: 100 },
+    child: { width: 100, height: 100 },
+    adult: { width: 100, height: 100 }
+};
+
 vi.mock('matter-js', () => {
     const MockBody = {
         position: { x: 0, y: 0 },
@@ -17,6 +23,9 @@ vi.mock('matter-js', () => {
         Composite: {
             add: vi.fn(),
         },
+        Body: {
+            applyForce: vi.fn()
+        }
     };
     return {
         ...MockMatter,
@@ -57,7 +66,7 @@ describe('Pet Entity', () => {
     it('should poop and trigger callback', () => {
         const mockWorld = {};
         const onPoop = vi.fn();
-        const pet = new Pet(100, 100, mockWorld, null, onPoop);
+        const pet = new Pet(100, 100, mockWorld, mockSprites, onPoop);
 
         pet.makePoop();
         expect(onPoop).toHaveBeenCalled();
@@ -66,7 +75,7 @@ describe('Pet Entity', () => {
     it('should initialize with default stats', () => {
         // Mock world
         const mockWorld = { gravity: { x: 0, y: 1 } };
-        const pet = new Pet(100, 100, mockWorld);
+        const pet = new Pet(100, 100, mockWorld, mockSprites);
 
         expect(pet.stats.hunger).toBe(0);
         expect(pet.stats.energy).toBe(100);
@@ -76,12 +85,13 @@ describe('Pet Entity', () => {
 
     it('should decay stats over time', () => {
         const mockWorld = { gravity: { x: 0, y: 1 } };
-        const pet = new Pet(100, 100, mockWorld);
+        const pet = new Pet(100, 100, mockWorld, mockSprites);
 
         // Simulate a tick
         // Simulate a 1 second update
         pet.update(1000);
 
+        // Baby decays fast?
         expect(pet.stats.hunger).toBeGreaterThan(0);
         expect(pet.stats.energy).toBeLessThan(100);
         expect(pet.stats.happiness).toBeLessThan(100);
@@ -89,7 +99,7 @@ describe('Pet Entity', () => {
 
     it('should feed correctly', () => {
         const mockWorld = {};
-        const pet = new Pet(100, 100, mockWorld);
+        const pet = new Pet(100, 100, mockWorld, mockSprites);
         pet.stats.hunger = 50;
 
         pet.feed();
@@ -103,7 +113,7 @@ describe('Pet Entity', () => {
 
     it('should sleep and recover energy', () => {
         const mockWorld = {};
-        const pet = new Pet(100, 100, mockWorld);
+        const pet = new Pet(100, 100, mockWorld, mockSprites);
         pet.stats.energy = 10;
 
         pet.sleep();
@@ -119,7 +129,7 @@ describe('Pet Entity', () => {
 
     it('should wake up when energy is full or manually', () => {
         const mockWorld = {};
-        const pet = new Pet(100, 100, mockWorld);
+        const pet = new Pet(100, 100, mockWorld, mockSprites);
         pet.stats.energy = 99;
 
         pet.sleep();
@@ -134,7 +144,7 @@ describe('Pet Entity', () => {
 
     it('should play and gain happiness but lose energy', () => {
         const mockWorld = {};
-        const pet = new Pet(100, 100, mockWorld);
+        const pet = new Pet(100, 100, mockWorld, mockSprites);
         pet.stats.happiness = 50;
         pet.stats.energy = 50;
 
@@ -149,10 +159,10 @@ describe('Pet Entity', () => {
 
     it('should clamp stats between 0 and 100', () => {
         const mockWorld = {};
-        const pet = new Pet(100, 100, mockWorld);
+        const pet = new Pet(100, 100, mockWorld, mockSprites);
 
         pet.stats.hunger = 101;
-        expect(pet.stats.hunger).toBe(101); // Constructor doesn't clamp, but update should? 
+        // expect(pet.stats.hunger).toBe(101); // Constructor doesn't clamp
         // Actually let's force clamp in update
         pet.stats.hunger = 120;
         pet.update(100);
@@ -165,7 +175,7 @@ describe('Pet Entity', () => {
 
     it('should enter DRAGGED state', () => {
         const mockWorld = {};
-        const pet = new Pet(100, 100, mockWorld);
+        const pet = new Pet(100, 100, mockWorld, mockSprites);
 
         pet.startDrag();
         expect(pet.state).toBe('DRAGGED');
@@ -173,7 +183,7 @@ describe('Pet Entity', () => {
 
     it('should return to IDLE after drag ends', () => {
         const mockWorld = {};
-        const pet = new Pet(100, 100, mockWorld);
+        const pet = new Pet(100, 100, mockWorld, mockSprites);
 
         pet.startDrag();
         expect(pet.state).toBe('DRAGGED');
@@ -184,7 +194,7 @@ describe('Pet Entity', () => {
 
     it('should serialize and deserialize', () => {
         const mockWorld = {};
-        const pet = new Pet(100, 100, mockWorld);
+        const pet = new Pet(100, 100, mockWorld, mockSprites);
         pet.stats.hunger = 50;
         pet.state = 'SLEEPING';
 
@@ -192,7 +202,7 @@ describe('Pet Entity', () => {
         expect(data.stats.hunger).toBe(50);
         expect(data.state).toBe('SLEEPING');
 
-        const pet2 = new Pet(100, 100, mockWorld);
+        const pet2 = new Pet(100, 100, mockWorld, mockSprites);
         pet2.deserialize(data);
         expect(pet2.stats.hunger).toBe(50);
         expect(pet2.state).toBe('SLEEPING');

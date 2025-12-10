@@ -4,18 +4,19 @@ import { AnimationController } from '../core/AnimationController.js';
 import { AudioSystem } from '../core/AudioSystem.js';
 
 export class Pet extends Entity {
-    constructor(x, y, world, spriteImage, onPoop) {
+    constructor(x, y, world, sprites, onPoop) {
         super(x, y, 40, world); // Radius 40 for now
 
         this.onPoop = onPoop;
         this.audio = new AudioSystem();
+        this.spritesAsset = sprites; // Store all assets
 
         // Sprite Init
         const frameSize = 1030 / 6;
         // Keep Sprite for drawing utility? Or just use it directly.
         // Let's keep Sprite but simplify it or just configure it dynamically.
         this.sprite = new Sprite({
-            image: spriteImage,
+            image: sprites.baby, // Start with baby
             frameWidth: frameSize,
             frameHeight: frameSize,
             rows: {} // We'll manually control frame index now
@@ -209,13 +210,15 @@ export class Pet extends Entity {
         if (this.sprite && this.animator) {
             const frame = this.animator.getCurrentFrame();
 
-            let scale = 1;
+            // Switch sprite sheet based on stage
             const stage = this.getStage();
-            if (stage === 'BABY') scale = 0.8;
-            if (stage === 'ADULT') scale = 1.2;
+            if (stage === 'BABY') this.sprite.image = this.spritesAsset.baby;
+            else if (stage === 'CHILD') this.sprite.image = this.spritesAsset.child;
+            else if (stage === 'ADULT') this.sprite.image = this.spritesAsset.adult;
 
-            const size = 128 * scale;
-
+            // Render
+            // We can keep specific sizing if we want, or just default 128
+            const size = 128;
             this.sprite.drawFrame(ctx, pos.x, pos.y, size, size, frame.row, frame.col);
         }
     }

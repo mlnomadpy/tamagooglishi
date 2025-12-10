@@ -27,14 +27,20 @@ export class Game {
     this.poops = [];
 
     // Load assets
-    const spriteImage = new Image();
-    spriteImage.src = "/src/assets/sprite_sheet.png";
+    const sprites = {
+      baby: new Image(),
+      child: new Image(),
+      adult: new Image()
+    };
+    sprites.baby.src = "/src/assets/sprites/baby.png";
+    sprites.child.src = "/src/assets/sprites/child.png";
+    sprites.adult.src = "/src/assets/sprites/adult.png";
 
     // Create a test entity (The Pet)
     const startX = typeof window !== "undefined" ? window.innerWidth / 2 : 400;
     const startY = typeof window !== "undefined" ? window.innerHeight / 2 : 300;
 
-    this.pet = new Pet(startX, startY, this.physics.world, spriteImage, (x, y) => this.spawnPoop(x, y));
+    this.pet = new Pet(startX, startY, this.physics.world, sprites, (x, y) => this.spawnPoop(x, y));
 
     // UI needs pet to be initialized
     this.ui = new UI(this);
