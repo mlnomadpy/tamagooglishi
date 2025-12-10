@@ -2,6 +2,8 @@ import { Physics } from "./Physics.js";
 import { Pet } from "../entities/Pet.js";
 import { Poop } from "../entities/Poop.js";
 import { UI } from "./UI.js";
+import { PetAPI } from "./PetAPI.js";
+import { Input } from "./Input.js";
 import Matter from "matter-js";
 
 export class Game {
@@ -36,6 +38,10 @@ export class Game {
 
     // UI needs pet to be initialized
     this.ui = new UI(this);
+    this.api = new PetAPI(this);
+    if (typeof window !== 'undefined') window.gameAPI = this.api;
+
+    this.input = new Input(this);
 
     this.load(); // Load save data if available
 
@@ -88,6 +94,9 @@ export class Game {
     }
     if (this.ui) {
       this.ui.update();
+    }
+    if (this.input) {
+      this.input.update();
     }
 
     // Auto-save every 5 seconds

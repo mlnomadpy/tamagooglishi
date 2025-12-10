@@ -8,8 +8,14 @@ export class Entity {
             frictionAir: 0.05
         });
 
+
         this.world = world;
         Matter.Composite.add(this.world, this.body);
+    }
+
+    applyForce(force) {
+        if (!this.body) return;
+        Matter.Body.applyForce(this.body, this.body.position, force);
     }
 
     draw(ctx) {

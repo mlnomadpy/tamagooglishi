@@ -8,6 +8,7 @@ export class UI {
         this.elEnergy = document.getElementById('stat-energy');
         this.elHappiness = document.getElementById('stat-happiness');
         this.elHygiene = document.getElementById('stat-hygiene');
+        this.elAge = document.getElementById('stat-age');
 
         this.btnFeed = document.getElementById('btn-feed');
         this.btnSleep = document.getElementById('btn-sleep');
@@ -39,6 +40,12 @@ export class UI {
         if (this.elEnergy) this.elEnergy.innerText = Math.floor(stats.energy);
         if (this.elHappiness) this.elHappiness.innerText = Math.floor(stats.happiness);
         if (this.elHygiene) this.elHygiene.innerText = Math.floor(stats.hygiene);
+
+        if (this.elAge) {
+            const stage = this.pet.getStage();
+            const ageMins = Math.floor(this.pet.age / 60);
+            this.elAge.innerText = `${stage} (${ageMins}m)`;
+        }
 
         if (this.pet.state === 'DEAD') {
             this.showGameOver();

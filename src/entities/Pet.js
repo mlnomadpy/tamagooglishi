@@ -83,6 +83,18 @@ export class Pet extends Entity {
 
         this.updateState(delta);
 
+        // Autonomy (AI)
+        if (this.state === 'IDLE') {
+            const stage = this.getStage();
+            if (stage !== 'BABY') {
+                // Autonomy Timer? Or random chance per frame?
+                // Timer is safer.
+                if (Math.random() < 0.005) { // 0.5% chance per tick ~ once every 3-4 sec at 60fps? No, 1/200 ticks.
+                    this.performAutonomousAction(stage);
+                }
+            }
+        }
+
         // Sync Animator
         if (this.animator && this.sprite) {
             this.animator.transition(this.state);
@@ -93,6 +105,12 @@ export class Pet extends Entity {
             this.sprite.frameIndex = frame.col;
             this.sprite.currentAnimation = this.state;
         }
+    }
+
+    getStage() {
+        if (this.age < 300) return 'BABY'; // 0-5 mins
+        if (this.age < 900) return 'CHILD'; // 5-15 mins
+        return 'ADULT'; // 15+ mins
     }
 
     updateState(delta) {
@@ -145,6 +163,29 @@ export class Pet extends Entity {
         if (this.audio) this.audio.play('SLEEP');
     }
 
+    performAutonomousAction(stage) {
+        const roll = Math.random();
+
+        // Needs priority
+        if (this.stats.energy < 30) {
+            this.sleep();
+            return;
+        }
+
+        if (this.stats.happiness < 40) {
+            this.play();
+            return;
+        }
+
+        // Random actions
+        if (stage === 'CHILD') {
+            if (roll < 0.3) this.play();
+        } else if (stage === 'ADULT') {
+            if (roll < 0.1) this.sleep(); // Naps
+            else if (roll < 0.4) this.play();
+        }
+    }
+
     makePoop() {
         if (this.onPoop) {
             this.onPoop(this.body.position.x, this.body.position.y);
@@ -167,7 +208,15 @@ export class Pet extends Entity {
 
         if (this.sprite && this.animator) {
             const frame = this.animator.getCurrentFrame();
-            this.sprite.drawFrame(ctx, pos.x, pos.y, 128, 128, frame.row, frame.col);
+
+            let scale = 1;
+            const stage = this.getStage();
+            if (stage === 'BABY') scale = 0.8;
+            if (stage === 'ADULT') scale = 1.2;
+
+            const size = 128 * scale;
+
+            this.sprite.drawFrame(ctx, pos.x, pos.y, size, size, frame.row, frame.col);
         }
     }
     serialize() {
