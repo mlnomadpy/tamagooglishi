@@ -25,11 +25,12 @@ export class Pet extends Entity {
         this.animator = new AnimationController({
             states: {
                 'IDLE': { row: 0, frames: 6, loop: true },
-                'EATING': { row: 1, frames: 6, loop: true }, // Loop eating while state active
-                'SLEEPING': { row: 2, frames: 6, loop: true },
+                'WALKING': { row: 1, frames: 6, loop: true },
+                'EATING': { row: 2, frames: 6, loop: true },
                 'PLAYING': { row: 3, frames: 6, loop: true },
-                'DRAGGED': { row: 3, frames: 6, loop: true },
-                'DEAD': { row: 2, frames: 1, loop: true } // Reuse sleep row, static frame
+                'DRAGGED': { row: 3, frames: 6, loop: true }, // Reuse Play
+                'SLEEPING': { row: 4, frames: 6, loop: true },
+                'DEAD': { row: 5, frames: 1, loop: true }
             },
             default: 'IDLE'
         });
@@ -216,8 +217,13 @@ export class Pet extends Entity {
             else if (stage === 'CHILD') this.sprite.image = this.spritesAsset.child;
             else if (stage === 'ADULT') this.sprite.image = this.spritesAsset.adult;
 
+            // Auto-detect grid size (assume 6x6)
+            if (this.sprite.image && this.sprite.image.complete && this.sprite.image.width > 0) {
+                this.sprite.frameWidth = this.sprite.image.width / 6;
+                this.sprite.frameHeight = this.sprite.image.height / 6;
+            }
+
             // Render
-            // We can keep specific sizing if we want, or just default 128
             const size = 128;
             this.sprite.drawFrame(ctx, pos.x, pos.y, size, size, frame.row, frame.col);
         }
