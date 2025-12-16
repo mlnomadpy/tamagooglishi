@@ -21,6 +21,35 @@ describe('LLMService', () => {
     });
   });
 
+  describe('status tracking', () => {
+    it('should return initializing status before initialize is called', () => {
+      const status = service.getStatus();
+      expect(status.type).toBe('initializing');
+      expect(status.message).toBeTruthy();
+    });
+
+    it('should return fallback status after initialize when browser AI is not available', async () => {
+      await service.initialize();
+      const status = service.getStatus();
+      expect(status.type).toBe('fallback');
+      expect(status.message).toBeTruthy();
+      expect(status.message).not.toContain('Using fallback response system');
+    });
+
+    it('should have isInitialized property', async () => {
+      expect(service.isInitialized).toBe(false);
+      await service.initialize();
+      expect(service.isInitialized).toBe(true);
+    });
+
+    it('should return user-friendly status message', async () => {
+      await service.initialize();
+      const status = service.getStatus();
+      expect(status.message).toBeTruthy();
+      expect(status.message.length).toBeGreaterThan(10);
+    });
+  });
+
   describe('context management', () => {
     it('should update context with stage and stats', () => {
       const stats = { hunger: 50, energy: 80, happiness: 60, hygiene: 90 };

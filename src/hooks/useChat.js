@@ -6,6 +6,7 @@ export function useChat(stats, stage, actions = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [llmStatus, setLlmStatus] = useState(null);
   const llmServiceRef = useRef(null);
   const actionsRef = useRef(actions);
 
@@ -19,7 +20,10 @@ export function useChat(stats, stage, actions = {}) {
     const initService = async () => {
       const service = getLLMService();
       llmServiceRef.current = service;
-      await service.initialize();
+      // Set initial status before initialization
+      setLlmStatus(service.getStatus());
+      const status = await service.initialize();
+      setLlmStatus(status);
       setIsInitialized(true);
     };
     
@@ -113,6 +117,7 @@ export function useChat(stats, stage, actions = {}) {
     sendMessage,
     toggleOpen,
     clearMessages,
-    isInitialized
+    isInitialized,
+    llmStatus
   };
 }

@@ -25,7 +25,8 @@ function App() {
     isLoading, 
     isOpen, 
     sendMessage, 
-    toggleOpen 
+    toggleOpen,
+    llmStatus
   } = useChat(stats, stage, chatActions);
 
   // Handle suggested actions from chat
@@ -51,6 +52,7 @@ function App() {
           onToggle={toggleOpen}
           stage={stage}
           isLoading={isLoading}
+          llmStatus={llmStatus}
         />
       </div>
       <GameCanvas ref={canvasRef} />
