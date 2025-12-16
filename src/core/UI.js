@@ -3,6 +3,9 @@ export class UI {
         this.game = game;
         this.pet = game.pet;
 
+        // Track if pet was alive at some point (to detect death during gameplay)
+        this.petWasAlive = this.pet.state !== 'DEAD';
+
         // Cache DOM elements
         this.elHunger = document.getElementById('stat-hunger');
         this.elEnergy = document.getElementById('stat-energy');
@@ -47,7 +50,13 @@ export class UI {
             this.elAge.innerText = `${stage} (${ageMins}m)`;
         }
 
-        if (this.pet.state === 'DEAD') {
+        // Track if pet was ever alive
+        if (this.pet.state !== 'DEAD') {
+            this.petWasAlive = true;
+        }
+
+        // Only show Game Over if pet died during gameplay (was alive at some point)
+        if (this.pet.state === 'DEAD' && this.petWasAlive) {
             this.showGameOver();
         }
     }
