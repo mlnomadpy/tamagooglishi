@@ -76,6 +76,10 @@ export function useGame(canvasRef) {
   }, []);
 
   const restart = useCallback(() => {
+    // Clear saved game data and reload the page
+    // Note: A full page reload is used here to properly reinitialize the Game class,
+    // which sets up Matter.js physics, event listeners, and animation loops.
+    // A proper in-memory reset would require significant refactoring of the Game class.
     localStorage.removeItem('tamagooglishi_save');
     window.location.reload();
   }, []);
