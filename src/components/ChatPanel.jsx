@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { MessageCircle, Send, X, Sparkles } from 'lucide-react';
+import { MessageCircle, Send, X, Sparkles, Bot, Cpu, Loader2 } from 'lucide-react';
+import { LLM_STATUS } from '../core/LLMService.js';
 
 function ChatPanel({ 
   messages, 
@@ -10,7 +11,8 @@ function ChatPanel({
   isOpen, 
   onToggle,
   stage,
-  isLoading 
+  isLoading,
+  llmStatus
 }) {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef(null);
@@ -63,6 +65,38 @@ function ChatPanel({
     }
   };
 
+  const getStatusIndicator = () => {
+    if (!llmStatus) return null;
+    
+    const { type, message } = llmStatus;
+    
+    if (type === LLM_STATUS.INITIALIZING) {
+      return (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground" title={message}>
+          <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+          <span className="sr-only">{message}</span>
+        </div>
+      );
+    }
+    
+    if (type === LLM_STATUS.BROWSER_AI) {
+      return (
+        <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400" title={message}>
+          <Bot className="h-3 w-3" aria-hidden="true" />
+          <span className="sr-only">{message}</span>
+        </div>
+      );
+    }
+    
+    // fallback type
+    return (
+      <div className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400" title={message}>
+        <Cpu className="h-3 w-3" aria-hidden="true" />
+        <span className="sr-only">{message}</span>
+      </div>
+    );
+  };
+
   // Minimized state - just show chat button
   if (!isOpen) {
     return (
@@ -83,6 +117,7 @@ function ChatPanel({
         <CardTitle className="text-base flex items-center gap-2">
           <span>{getStageEmoji()}</span>
           <span>Chat with {getStageName()}</span>
+          {getStatusIndicator()}
         </CardTitle>
         <Button 
           variant="ghost" 
@@ -100,6 +135,9 @@ function ChatPanel({
             <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" aria-hidden="true" />
             <p>Say hello to your pet!</p>
             <p className="text-xs mt-1">They'll respond based on their current stage and needs.</p>
+            {llmStatus && (
+              <p className="text-xs mt-2 opacity-75">{llmStatus.message}</p>
+            )}
           </div>
         )}
         

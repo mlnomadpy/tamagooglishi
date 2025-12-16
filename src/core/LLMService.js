@@ -125,15 +125,53 @@ const MOVEMENT_PATTERNS = {
 // Available pet abilities
 const PET_ABILITIES = ['feed', 'play', 'sleep', 'clean', 'move'];
 
+// LLM status types
+export const LLM_STATUS = {
+  INITIALIZING: 'initializing',
+  BROWSER_AI: 'browser-ai',
+  FALLBACK: 'fallback'
+};
+
+// User-friendly status messages
+const STATUS_MESSAGES = {
+  [LLM_STATUS.INITIALIZING]: 'Starting up chat system...',
+  [LLM_STATUS.BROWSER_AI]: 'Using browser AI for smart responses',
+  [LLM_STATUS.FALLBACK]: 'Using built-in responses (Browser AI not available)'
+};
+
 export class LLMService {
   constructor() {
     this.session = null;
     this.isAvailable = false;
+    this.isInitialized = false;
     this.currentStage = 'BABY';
     this.petStats = null;
     this.conversationHistory = [];
     this.maxHistoryLength = 10;
     this.actionHandler = null;
+  }
+
+  /**
+   * Get the current status of the LLM service
+   * @returns {{type: string, message: string, isAvailable: boolean, isInitialized: boolean}}
+   */
+  getStatus() {
+    if (!this.isInitialized) {
+      return {
+        type: LLM_STATUS.INITIALIZING,
+        message: STATUS_MESSAGES[LLM_STATUS.INITIALIZING],
+        isAvailable: false,
+        isInitialized: false
+      };
+    }
+
+    const type = this.isAvailable ? LLM_STATUS.BROWSER_AI : LLM_STATUS.FALLBACK;
+    return {
+      type,
+      message: STATUS_MESSAGES[type],
+      isAvailable: this.isAvailable,
+      isInitialized: true
+    };
   }
 
   /**
@@ -206,6 +244,7 @@ export class LLMService {
   /**
    * Initialize the LLM service
    * Attempts to use Chrome's built-in AI, falls back to simple responses
+   * @returns {Promise<{type: string, message: string, isAvailable: boolean, isInitialized: boolean}>} Status object
    */
   async initialize() {
     // Check if the browser supports the Prompt API with robust feature detection
@@ -217,17 +256,17 @@ export class LLMService {
         const capabilities = await window.ai.languageModel.capabilities();
         if (capabilities && (capabilities.available === 'readily' || capabilities.available === 'after-download')) {
           this.isAvailable = true;
-          console.log('LLM Service: Browser AI available');
-          return true;
+          this.isInitialized = true;
+          return this.getStatus();
         }
       } catch (error) {
-        console.warn('LLM Service: Browser AI not available', error);
+        // Browser AI not available, will use fallback
       }
     }
     
-    console.log('LLM Service: Using fallback response system');
     this.isAvailable = false;
-    return false;
+    this.isInitialized = true;
+    return this.getStatus();
   }
 
   /**
