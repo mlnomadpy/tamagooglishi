@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { MessageCircle, Send, X, Sparkles, Bot, Cpu } from 'lucide-react';
+import { LLM_STATUS } from '../core/LLMService.js';
 
 function ChatPanel({ 
   messages, 
@@ -69,15 +70,16 @@ function ChatPanel({
     
     const { type, message } = llmStatus;
     
-    if (type === 'initializing') {
+    if (type === LLM_STATUS.INITIALIZING) {
       return (
         <div className="flex items-center gap-1 text-xs text-muted-foreground" title={message}>
-          <span className="animate-spin">⏳</span>
+          <span className="animate-spin" aria-hidden="true">⏳</span>
+          <span className="sr-only">{message}</span>
         </div>
       );
     }
     
-    if (type === 'browser-ai') {
+    if (type === LLM_STATUS.BROWSER_AI) {
       return (
         <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400" title={message}>
           <Bot className="h-3 w-3" aria-hidden="true" />

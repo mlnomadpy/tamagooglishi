@@ -126,7 +126,7 @@ const MOVEMENT_PATTERNS = {
 const PET_ABILITIES = ['feed', 'play', 'sleep', 'clean', 'move'];
 
 // LLM status types
-const LLM_STATUS = {
+export const LLM_STATUS = {
   INITIALIZING: 'initializing',
   BROWSER_AI: 'browser-ai',
   FALLBACK: 'fallback'
