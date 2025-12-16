@@ -6,6 +6,11 @@ import { PetAPI } from "./PetAPI.js";
 import { Input } from "./Input.js";
 import Matter from "matter-js";
 
+// Import sprite assets to ensure Vite processes them correctly
+import babySpriteUrl from "../assets/sprites/baby.png";
+import childSpriteUrl from "../assets/sprites/child.png";
+import adultSpriteUrl from "../assets/sprites/adult.png";
+
 export class Game {
   constructor() {
     this.canvas = document.getElementById("game-canvas");
@@ -32,9 +37,9 @@ export class Game {
       child: new Image(),
       adult: new Image()
     };
-    sprites.baby.src = "/src/assets/sprites/baby.png";
-    sprites.child.src = "/src/assets/sprites/child.png";
-    sprites.adult.src = "/src/assets/sprites/adult.png";
+    sprites.baby.src = babySpriteUrl;
+    sprites.child.src = childSpriteUrl;
+    sprites.adult.src = adultSpriteUrl;
 
     // Create a test entity (The Pet)
     const startX = typeof window !== "undefined" ? window.innerWidth / 2 : 400;
