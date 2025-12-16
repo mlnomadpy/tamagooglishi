@@ -112,8 +112,13 @@ function ChatPanel({
                   : 'bg-secondary text-secondary-foreground'
               }`}
             >
+              {msg.executedAction && msg.role === 'assistant' && (
+                <div className="text-xs text-green-600 dark:text-green-400 mb-1 font-medium">
+                  ✓ {getExecutedActionText(msg.executedAction)}
+                </div>
+              )}
               <p className="whitespace-pre-wrap">{msg.content}</p>
-              {msg.suggestedAction && msg.role === 'assistant' && (
+              {msg.suggestedAction && msg.role === 'assistant' && !msg.executedAction && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -173,6 +178,20 @@ function getActionText(action) {
     case 'play': return '🎮 Play with me!';
     case 'clean': return '🧼 Clean up';
     default: return action;
+  }
+}
+
+function getExecutedActionText(action) {
+  if (action.startsWith('move:')) {
+    const direction = action.split(':')[1];
+    return `Moved ${direction.toLowerCase()}`;
+  }
+  switch (action) {
+    case 'feed': return 'Fed the pet';
+    case 'sleep': return 'Put to sleep';
+    case 'play': return 'Playing now';
+    case 'clean': return 'Cleaned up';
+    default: return `Executed: ${action}`;
   }
 }
 

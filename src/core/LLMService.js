@@ -106,6 +106,25 @@ const ACTION_KEYWORDS = {
   clean: ['clean', 'dirty', 'wash', 'bath', 'hygiene', 'messy', 'poop']
 };
 
+// Command patterns for direct action execution
+const COMMAND_PATTERNS = {
+  feed: ['feed', 'eat', 'give food', 'num num', 'food please'],
+  sleep: ['sleep', 'nap', 'rest', 'go to bed', 'bedtime'],
+  play: ['play', 'have fun', 'game', 'let\'s play'],
+  clean: ['clean', 'wash', 'bath', 'tidy', 'clean up']
+};
+
+// Movement patterns
+const MOVEMENT_PATTERNS = {
+  UP: ['up', 'north', 'forward'],
+  DOWN: ['down', 'south', 'backward', 'back'],
+  LEFT: ['left', 'west'],
+  RIGHT: ['right', 'east']
+};
+
+// Available pet abilities
+const PET_ABILITIES = ['feed', 'play', 'sleep', 'clean', 'move'];
+
 export class LLMService {
   constructor() {
     this.session = null;
@@ -114,6 +133,74 @@ export class LLMService {
     this.petStats = null;
     this.conversationHistory = [];
     this.maxHistoryLength = 10;
+    this.actionHandler = null;
+  }
+
+  /**
+   * Set the action handler callback for executing pet actions
+   * @param {Function} handler - Callback function that takes (action, ...args)
+   */
+  setActionHandler(handler) {
+    this.actionHandler = handler;
+  }
+
+  /**
+   * Get list of available pet abilities
+   * @returns {string[]} Array of ability names
+   */
+  getAvailableAbilities() {
+    return [...PET_ABILITIES];
+  }
+
+  /**
+   * Parse user message to detect direct commands
+   * @param {string} message - User's message
+   * @returns {string|null} Command to execute or null if not a command
+   */
+  parseCommand(message) {
+    const lowerMessage = message.toLowerCase().trim();
+    
+    // Check for movement commands first (more specific patterns)
+    for (const [direction, patterns] of Object.entries(MOVEMENT_PATTERNS)) {
+      for (const pattern of patterns) {
+        // Check patterns like "move up", "go up", "walk left"
+        if (lowerMessage.includes(`move ${pattern}`) ||
+            lowerMessage.includes(`go ${pattern}`) ||
+            lowerMessage.includes(`walk ${pattern}`) ||
+            lowerMessage.includes(`run ${pattern}`)) {
+          return `move:${direction}`;
+        }
+      }
+    }
+
+    // Check for direct action commands
+    for (const [action, patterns] of Object.entries(COMMAND_PATTERNS)) {
+      for (const pattern of patterns) {
+        if (lowerMessage.includes(pattern)) {
+          return action;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Execute a parsed command if action handler is set
+   * @param {string} command - Command string (e.g., 'feed', 'move:UP')
+   * @returns {boolean} True if action was executed
+   */
+  executeCommand(command) {
+    if (!this.actionHandler || !command) return false;
+
+    if (command.startsWith('move:')) {
+      const direction = command.split(':')[1];
+      this.actionHandler('move', direction);
+      return true;
+    }
+
+    this.actionHandler(command);
+    return true;
   }
 
   /**
@@ -188,12 +275,26 @@ Express your needs based on these stats naturally in conversation.`;
       this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength * 2);
     }
 
+    // Check for direct commands first
+    const command = this.parseCommand(userMessage);
+    let executedAction = undefined;
+    
+    if (command && this.actionHandler) {
+      this.executeCommand(command);
+      executedAction = command;
+    }
+
     let response;
     
     if (this.isAvailable) {
-      response = await this.chatWithBrowserAI(userMessage);
+      response = await this.chatWithBrowserAI(userMessage, executedAction);
     } else {
-      response = this.generateFallbackResponse(userMessage);
+      response = this.generateFallbackResponse(userMessage, executedAction);
+    }
+
+    // Add executedAction to response
+    if (executedAction) {
+      response.executedAction = executedAction;
     }
 
     // Add response to history
@@ -205,7 +306,7 @@ Express your needs based on these stats naturally in conversation.`;
   /**
    * Chat using the browser's built-in AI
    */
-  async chatWithBrowserAI(userMessage) {
+  async chatWithBrowserAI(userMessage, executedAction = null) {
     try {
       const systemPrompt = this.buildSystemPrompt();
       
@@ -216,7 +317,16 @@ Express your needs based on these stats naturally in conversation.`;
         });
       }
 
-      const response = await this.session.prompt(userMessage);
+      // If action was executed, modify the prompt to acknowledge it
+      let promptMessage = userMessage;
+      if (executedAction) {
+        const actionName = executedAction.startsWith('move:') 
+          ? `moving ${executedAction.split(':')[1].toLowerCase()}`
+          : executedAction;
+        promptMessage = `[The user asked you to ${actionName} and you just did it.] ${userMessage}`;
+      }
+
+      const response = await this.session.prompt(promptMessage);
       const suggestedAction = this.detectSuggestedAction(response);
 
       return {
@@ -231,19 +341,42 @@ Express your needs based on these stats naturally in conversation.`;
         this.session.destroy();
         this.session = null;
       }
-      return this.generateFallbackResponse(userMessage);
+      return this.generateFallbackResponse(userMessage, executedAction);
     }
   }
 
   /**
    * Generate a fallback response when AI is not available
    */
-  generateFallbackResponse(userMessage) {
+  generateFallbackResponse(userMessage, executedAction = null) {
     const personality = this.getPersonality();
     const lowerMessage = userMessage.toLowerCase();
     
     let response = '';
     let suggestedAction = null;
+
+    // If an action was executed, generate an acknowledgment response
+    if (executedAction) {
+      response = this.getActionAcknowledgmentResponse(executedAction);
+      return {
+        message: response,
+        suggestedAction: null,
+        isAI: false
+      };
+    }
+
+    // Check if user is asking about abilities
+    if (lowerMessage.includes('what can you do') || 
+        lowerMessage.includes('abilities') || 
+        lowerMessage.includes('commands') ||
+        lowerMessage.includes('what can i do')) {
+      response = this.getAbilitiesResponse();
+      return {
+        message: response,
+        suggestedAction: null,
+        isAI: false
+      };
+    }
 
     // Check for action-related keywords and respond accordingly
     if (this.containsKeywords(lowerMessage, ACTION_KEYWORDS.feed)) {
@@ -516,6 +649,121 @@ Express your needs based on these stats naturally in conversation.`;
 
     const responses = genericResponses[this.currentStage] || genericResponses.BABY;
     return responses[Math.floor(Math.random() * responses.length)];
+  }
+
+  /**
+   * Generate response acknowledging an executed action
+   */
+  getActionAcknowledgmentResponse(action) {
+    const actionResponses = {
+      feed: {
+        BABY: [
+          "Yum yum! Num nums! *chomps happily* 🍼😋",
+          "Mmmm! Foooood! *happy tummy* 🥰",
+          "Om nom nom! Thankies! ✨🍼"
+        ],
+        CHILD: [
+          "Yay food! *munches happily* Thanks so much! 🍕😋",
+          "Mmm this is so yummy! I love eating! 🌟",
+          "Nom nom nom! That hit the spot! 😄🍔"
+        ],
+        ADULT: [
+          "Ah, that's better. Thanks for the food! 🍽️",
+          "Delicious! I really needed that. 😊",
+          "Perfect timing! I was getting hungry. Thanks! 👍"
+        ]
+      },
+      sleep: {
+        BABY: [
+          "*yaaawn* Nap nap time... zzzz 😴💤",
+          "Sweepy time... *curls up* 🌙✨",
+          "*closes eyes* Night night... 💤🥚"
+        ],
+        CHILD: [
+          "*stretches* Okay, nap time! See you when I wake up! 😴",
+          "Zzzzz... *falls asleep* 💤🌟",
+          "Sleepy time! *snuggles in* 🌙"
+        ],
+        ADULT: [
+          "A nap sounds perfect right now. *settles in* 😴",
+          "Thanks, I really need this rest. 💤",
+          "Sweet dreams... *drifts off* 🌙"
+        ]
+      },
+      play: {
+        BABY: [
+          "Yayyy! Pway pway! *bounces excitedly* 🎈✨",
+          "Wheee! Fun fun! *giggles* 🎉",
+          "*jumps around* So fun! Goo goo! 🌟"
+        ],
+        CHILD: [
+          "Woohoo! This is so fun! *plays happily* 🎮🌟",
+          "Yay! I love playing! Best time ever! 🎈",
+          "Hehe! This is awesome! More more! 😄🎉"
+        ],
+        ADULT: [
+          "This is great! I needed this. 🎯",
+          "Nice! A little fun goes a long way. 😊",
+          "Ha! This is actually pretty entertaining! 🎲"
+        ]
+      },
+      clean: {
+        BABY: [
+          "Sparkly clean! *happy wiggles* ✨🧼",
+          "Nice and clean now! Ahhh! 🛁😊",
+          "No more yucky! Yay! 🧼✨"
+        ],
+        CHILD: [
+          "Ah! So fresh and clean now! Thanks! 🧼🌟",
+          "Squeaky clean! That feels so much better! ✨",
+          "Yay no more dirt! I feel great! 🛁😄"
+        ],
+        ADULT: [
+          "Much better. Thanks for keeping things tidy. 🧼",
+          "Ah, cleanliness feels good. Appreciate it! ✨",
+          "All clean! That was needed. Thanks! 👍"
+        ]
+      }
+    };
+
+    // Handle movement actions
+    if (action.startsWith('move:')) {
+      const direction = action.split(':')[1];
+      const moveResponses = {
+        BABY: [
+          `*waddles ${direction.toLowerCase()}* Wheee! 🥚`,
+          `Going ${direction.toLowerCase()}! Goo goo! ✨`,
+          `*moves ${direction.toLowerCase()}* Fun! 🎈`
+        ],
+        CHILD: [
+          `*runs ${direction.toLowerCase()}* Woosh! 🌟`,
+          `Moving ${direction.toLowerCase()}! This is fun! 😄`,
+          `Look at me go ${direction.toLowerCase()}! 🎈`
+        ],
+        ADULT: [
+          `*moves ${direction.toLowerCase()}* On my way. 👍`,
+          `Going ${direction.toLowerCase()}! 😊`,
+          `Heading ${direction.toLowerCase()}! 🎯`
+        ]
+      };
+      const responses = moveResponses[this.currentStage] || moveResponses.BABY;
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
+
+    const responses = actionResponses[action]?.[this.currentStage] || actionResponses[action]?.BABY || ["Okay! 👍"];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+
+  /**
+   * Generate response listing available abilities
+   */
+  getAbilitiesResponse() {
+    const abilityResponses = {
+      BABY: "Me can do! 🥚\n• Feed me - say 'feed' or 'eat'\n• Pway - say 'play'\n• Nap nap - say 'sleep'\n• Clean clean - say 'clean'\n• Move - say 'move up/down/left/right' ✨",
+      CHILD: "I can do lots of things! 🌟\n• Eat food - just say 'feed me'!\n• Play games - say 'let's play'!\n• Take naps - say 'go to sleep'\n• Get clean - say 'clean up'\n• Move around - say 'move up/down/left/right' 🎮",
+      ADULT: "Here's what I can do: 😊\n• Feed - just ask me to eat\n• Play - I love games, ask to play\n• Sleep - I can rest when you say so\n• Clean - keep things tidy\n• Move - I can move in any direction (up/down/left/right) 🎯"
+    };
+    return abilityResponses[this.currentStage] || abilityResponses.BABY;
   }
 
   /**

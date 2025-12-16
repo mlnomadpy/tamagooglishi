@@ -1,12 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getLLMService } from '../core/LLMService.js';
 
-export function useChat(stats, stage) {
+export function useChat(stats, stage, actions = {}) {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const llmServiceRef = useRef(null);
+  const actionsRef = useRef(actions);
+
+  // Keep actions ref updated
+  useEffect(() => {
+    actionsRef.current = actions;
+  }, [actions]);
 
   // Initialize LLM service
   useEffect(() => {
@@ -25,6 +31,20 @@ export function useChat(stats, stage) {
       }
     };
   }, []);
+
+  // Set up action handler
+  useEffect(() => {
+    if (llmServiceRef.current && isInitialized) {
+      llmServiceRef.current.setActionHandler((action, ...args) => {
+        const currentActions = actionsRef.current;
+        if (action === 'move' && currentActions.move) {
+          currentActions.move(args[0]); // direction
+        } else if (currentActions[action]) {
+          currentActions[action]();
+        }
+      });
+    }
+  }, [isInitialized]);
 
   // Update LLM context when stats or stage change
   useEffect(() => {
@@ -49,6 +69,7 @@ export function useChat(stats, stage) {
         role: 'assistant',
         content: response.message,
         suggestedAction: response.suggestedAction,
+        executedAction: response.executedAction,
         isAI: response.isAI
       };
       setMessages(prev => [...prev, assistantMessage]);

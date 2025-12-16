@@ -75,6 +75,12 @@ export function useGame(canvasRef) {
     }
   }, []);
 
+  const move = useCallback((direction) => {
+    if (gameRef.current?.api) {
+      gameRef.current.api.move(direction);
+    }
+  }, []);
+
   const restart = useCallback(() => {
     // Clear saved game data and reload the page
     // Note: A full page reload is used here to properly reinitialize the Game class,
@@ -95,6 +101,7 @@ export function useGame(canvasRef) {
       sleep,
       play,
       clean,
+      move,
       restart
     }
   };
