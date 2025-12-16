@@ -92,3 +92,30 @@ canvas {
   transform: translate(2px, 2px);
   box-shadow: 2px 2px 0px #333;
 }
+
+/* Game Over Overlay */
+#game-over {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  text-align: center;
+}
+
+.game-over-text {
+  color: red;
+  font-size: 32px;
+  font-family: "Press Start 2P", monospace;
+}
+
+.restart-btn {
+  display: block;
+  margin-top: 20px;
+  font-size: 16px;
+  padding: 10px 20px;
+  background: #ffcc00;
+  border: 2px solid #333;
+  cursor: pointer;
+}

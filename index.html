@@ -6,29 +6,11 @@
   <link rel="icon" type="image/svg+xml" href="./vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tamagooglishi</title>
-  <link rel="stylesheet" href="./src/style.css">
 </head>
 
 <body>
-  <div id="app">
-    <div id="ui-layer">
-      <div id="stats-panel">
-        <div class="stat-row">Hunger: <span id="stat-hunger">0</span>%</div>
-        <div class="stat-row">Energy: <span id="stat-energy">100</span>%</div>
-        <div class="stat-row">Happiness: <span id="stat-happiness">100</span>%</div>
-        <div class="stat-row">Hygiene: <span id="stat-hygiene">100</span>%</div>
-        <div class="stat-row">Stage: <span id="stat-age">BABY</span></div>
-      </div>
-      <div id="actions-panel">
-        <button id="btn-feed" class="action-btn">FEED</button>
-        <button id="btn-sleep" class="action-btn">SLEEP</button>
-        <button id="btn-play" class="action-btn">PLAY</button>
-        <button id="btn-clean" class="action-btn">CLEAN</button>
-      </div>
-    </div>
-    <canvas id="game-canvas"></canvas>
-  </div>
-  <script type="module" src="./src/main.js"></script>
+  <div id="root"></div>
+  <script type="module" src="./src/main.jsx"></script>
 </body>
 
 </html>
