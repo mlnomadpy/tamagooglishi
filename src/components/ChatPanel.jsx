@@ -97,7 +97,7 @@ function ChatPanel({
       <CardContent className="flex-1 overflow-y-auto p-3 space-y-3">
         {messages.length === 0 && (
           <div className="text-center text-muted-foreground text-sm py-8">
-            <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" aria-hidden="true" />
             <p>Say hello to your pet!</p>
             <p className="text-xs mt-1">They'll respond based on their current stage and needs.</p>
           </div>
@@ -149,6 +149,7 @@ function ChatPanel({
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a message..."
+          aria-label="Chat message input"
           disabled={isLoading}
           className="flex-1 px-3 py-2 text-sm rounded-md border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:opacity-50"
         />
@@ -156,8 +157,9 @@ function ChatPanel({
           type="submit" 
           size="icon" 
           disabled={!inputValue.trim() || isLoading}
+          aria-label="Send message"
         >
-          <Send className="h-4 w-4" />
+          <Send className="h-4 w-4" aria-hidden="true" />
         </Button>
       </form>
     </Card>

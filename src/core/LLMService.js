@@ -3,6 +3,40 @@
  * Uses the browser's built-in AI API (Chrome's Prompt API) or falls back to a simple response system
  */
 
+// Stat thresholds for determining needs and descriptions
+const THRESHOLDS = {
+  CRITICAL: 70,      // Very high urgency (e.g., very hungry)
+  MODERATE: 40,      // Moderate need
+  LOW: 30,           // Low threshold for some stats
+  URGENT: 60,        // Urgency threshold for action detection
+  HAPPINESS: 70,     // Happiness threshold for play action
+  URGENCY_MIN: 40    // Minimum urgency to suggest an action
+};
+
+// Helper function to get stat description
+function getStatDescription(statName, value) {
+  switch (statName) {
+    case 'hunger':
+      if (value > THRESHOLDS.CRITICAL) return 'very hungry!';
+      if (value > THRESHOLDS.MODERATE) return 'getting hungry';
+      return 'well fed';
+    case 'energy':
+      if (value < THRESHOLDS.LOW) return 'very tired!';
+      if (value < THRESHOLDS.URGENT) return 'a bit tired';
+      return 'energetic';
+    case 'happiness':
+      if (value < THRESHOLDS.LOW) return 'sad';
+      if (value < THRESHOLDS.URGENT) return 'okay';
+      return 'happy';
+    case 'hygiene':
+      if (value < THRESHOLDS.LOW) return 'very dirty!';
+      if (value < THRESHOLDS.URGENT) return 'could use cleaning';
+      return 'clean';
+    default:
+      return 'unknown';
+  }
+}
+
 // Stage-based personality prompts
 const STAGE_PERSONALITIES = {
   BABY: {
@@ -87,11 +121,14 @@ export class LLMService {
    * Attempts to use Chrome's built-in AI, falls back to simple responses
    */
   async initialize() {
-    // Check if the browser supports the Prompt API
-    if (typeof window !== 'undefined' && window.ai && window.ai.languageModel) {
+    // Check if the browser supports the Prompt API with robust feature detection
+    if (typeof window !== 'undefined' && 
+        window.ai && 
+        window.ai.languageModel && 
+        typeof window.ai.languageModel.capabilities === 'function') {
       try {
         const capabilities = await window.ai.languageModel.capabilities();
-        if (capabilities.available === 'readily' || capabilities.available === 'after-download') {
+        if (capabilities && (capabilities.available === 'readily' || capabilities.available === 'after-download')) {
           this.isAvailable = true;
           console.log('LLM Service: Browser AI available');
           return true;
@@ -130,10 +167,10 @@ export class LLMService {
     
     if (this.petStats) {
       prompt += `\n\nYour current stats:
-- Hunger: ${this.petStats.hunger}% (${this.petStats.hunger > 70 ? 'very hungry!' : this.petStats.hunger > 40 ? 'getting hungry' : 'well fed'})
-- Energy: ${this.petStats.energy}% (${this.petStats.energy < 30 ? 'very tired!' : this.petStats.energy < 60 ? 'a bit tired' : 'energetic'})
-- Happiness: ${this.petStats.happiness}% (${this.petStats.happiness < 30 ? 'sad' : this.petStats.happiness < 60 ? 'okay' : 'happy'})
-- Hygiene: ${this.petStats.hygiene}% (${this.petStats.hygiene < 30 ? 'very dirty!' : this.petStats.hygiene < 60 ? 'could use cleaning' : 'clean'})
+- Hunger: ${this.petStats.hunger}% (${getStatDescription('hunger', this.petStats.hunger)})
+- Energy: ${this.petStats.energy}% (${getStatDescription('energy', this.petStats.energy)})
+- Happiness: ${this.petStats.happiness}% (${getStatDescription('happiness', this.petStats.happiness)})
+- Hygiene: ${this.petStats.hygiene}% (${getStatDescription('hygiene', this.petStats.hygiene)})
 
 Express your needs based on these stats naturally in conversation.`;
     }
@@ -257,10 +294,10 @@ Express your needs based on these stats naturally in conversation.`;
       if (this.containsKeywords(lowerResponse, keywords)) {
         // Check if the pet actually needs this
         if (this.petStats) {
-          if (action === 'feed' && this.petStats.hunger > 40) return action;
-          if (action === 'sleep' && this.petStats.energy < 60) return action;
-          if (action === 'play' && this.petStats.happiness < 70) return action;
-          if (action === 'clean' && this.petStats.hygiene < 60) return action;
+          if (action === 'feed' && this.petStats.hunger > THRESHOLDS.MODERATE) return action;
+          if (action === 'sleep' && this.petStats.energy < THRESHOLDS.URGENT) return action;
+          if (action === 'play' && this.petStats.happiness < THRESHOLDS.HAPPINESS) return action;
+          if (action === 'clean' && this.petStats.hygiene < THRESHOLDS.URGENT) return action;
         }
       }
     }
@@ -281,7 +318,7 @@ Express your needs based on these stats naturally in conversation.`;
     ];
     
     const mostUrgent = needs.reduce((max, need) => need.urgency > max.urgency ? need : max);
-    return mostUrgent.urgency > 40 ? mostUrgent.action : null;
+    return mostUrgent.urgency > THRESHOLDS.URGENCY_MIN ? mostUrgent.action : null;
   }
 
   // Stage-specific response generators

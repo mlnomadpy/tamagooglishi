@@ -54,10 +54,17 @@ export function useChat(stats, stage) {
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Chat error:', error);
-      // Add error message
+      // Add user-friendly error message based on error type
+      let errorContent = "Oops! I couldn't understand that. Try asking me something else! 😅";
+      if (error.name === 'NetworkError' || error.message?.includes('network')) {
+        errorContent = "I'm having trouble connecting right now. Please try again! 🔄";
+      } else if (error.name === 'TimeoutError' || error.message?.includes('timeout')) {
+        errorContent = "That took too long! Let me try again... ⏳";
+      }
+      
       const errorMessage = {
         role: 'assistant',
-        content: "Oops! Something went wrong... *confused sounds* 😵",
+        content: errorContent,
         suggestedAction: null,
         isAI: false
       };
