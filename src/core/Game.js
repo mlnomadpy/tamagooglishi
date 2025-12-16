@@ -1,7 +1,6 @@
 import { Physics } from "./Physics.js";
 import { Pet } from "../entities/Pet.js";
 import { Poop } from "../entities/Poop.js";
-import { UI } from "./UI.js";
 import { PetAPI } from "./PetAPI.js";
 import { Input } from "./Input.js";
 import Matter from "matter-js";
@@ -12,7 +11,10 @@ import childSpriteUrl from "../assets/sprites/child.png";
 import adultSpriteUrl from "../assets/sprites/adult.png";
 
 export class Game {
-  constructor() {
+  constructor(options = {}) {
+    // When using React, UI is handled by React components
+    const { useReactUI = true } = options;
+    
     this.canvas = document.getElementById("game-canvas");
     // Handle case where canvas might not be in DOM (e.g. tests)
     if (!this.canvas) {
@@ -47,8 +49,15 @@ export class Game {
 
     this.pet = new Pet(startX, startY, this.physics.world, sprites, (x, y) => this.spawnPoop(x, y));
 
-    // UI needs pet to be initialized
-    this.ui = new UI(this);
+    // Only create legacy UI when not using React
+    this.ui = null;
+    if (!useReactUI) {
+      // Dynamically import UI to avoid issues when React is used
+      import("./UI.js").then(({ UI }) => {
+        this.ui = new UI(this);
+      });
+    }
+    
     this.api = new PetAPI(this);
     if (typeof window !== 'undefined') window.gameAPI = this.api;
 
