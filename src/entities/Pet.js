@@ -69,6 +69,9 @@ export class Pet extends Entity {
         this.stats.energy = Math.min(100, Math.max(0, this.stats.energy - (2 * seconds)));
         this.stats.happiness = Math.min(100, Math.max(0, this.stats.happiness - (3 * seconds)));
 
+        // Aging logic - increment age in seconds
+        this.age += seconds;
+
         // Check Death
         if (this.stats.hunger >= 100 || this.stats.energy <= 0 || this.stats.happiness <= 0) {
             this.die();
