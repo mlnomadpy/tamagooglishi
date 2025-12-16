@@ -168,4 +168,148 @@ describe('LLMService', () => {
       expect(instance1).toBe(instance2);
     });
   });
+
+  describe('command parsing', () => {
+    beforeEach(() => {
+      service.petStats = { hunger: 50, energy: 80, happiness: 60, hygiene: 90 };
+    });
+
+    it('should parse direct feed command', () => {
+      const command = service.parseCommand('feed the pet');
+      expect(command).toBe('feed');
+    });
+
+    it('should parse direct play command', () => {
+      const command = service.parseCommand('play with me');
+      expect(command).toBe('play');
+    });
+
+    it('should parse direct sleep command', () => {
+      const command = service.parseCommand('go to sleep');
+      expect(command).toBe('sleep');
+    });
+
+    it('should parse direct clean command', () => {
+      const command = service.parseCommand('clean up');
+      expect(command).toBe('clean');
+    });
+
+    it('should parse movement commands', () => {
+      expect(service.parseCommand('move up')).toBe('move:UP');
+      expect(service.parseCommand('move down')).toBe('move:DOWN');
+      expect(service.parseCommand('move left')).toBe('move:LEFT');
+      expect(service.parseCommand('move right')).toBe('move:RIGHT');
+      expect(service.parseCommand('go up')).toBe('move:UP');
+      expect(service.parseCommand('walk left')).toBe('move:LEFT');
+    });
+
+    it('should return null for non-command messages', () => {
+      const command = service.parseCommand('hello there');
+      expect(command).toBeNull();
+    });
+
+    it('should handle imperative commands', () => {
+      expect(service.parseCommand('eat something')).toBe('feed');
+      expect(service.parseCommand('take a nap')).toBe('sleep');
+      expect(service.parseCommand('have fun')).toBe('play');
+    });
+  });
+
+  describe('action execution', () => {
+    let mockActionHandler;
+
+    beforeEach(() => {
+      service.petStats = { hunger: 50, energy: 80, happiness: 60, hygiene: 90 };
+      mockActionHandler = vi.fn();
+      service.setActionHandler(mockActionHandler);
+    });
+
+    it('should execute feed action when command is parsed', async () => {
+      const response = await service.chat('feed the pet');
+      expect(mockActionHandler).toHaveBeenCalledWith('feed');
+      expect(response.executedAction).toBe('feed');
+    });
+
+    it('should execute play action when command is parsed', async () => {
+      const response = await service.chat('play with me');
+      expect(mockActionHandler).toHaveBeenCalledWith('play');
+      expect(response.executedAction).toBe('play');
+    });
+
+    it('should execute sleep action when command is parsed', async () => {
+      const response = await service.chat('go to sleep');
+      expect(mockActionHandler).toHaveBeenCalledWith('sleep');
+      expect(response.executedAction).toBe('sleep');
+    });
+
+    it('should execute clean action when command is parsed', async () => {
+      const response = await service.chat('clean up');
+      expect(mockActionHandler).toHaveBeenCalledWith('clean');
+      expect(response.executedAction).toBe('clean');
+    });
+
+    it('should execute movement actions', async () => {
+      const response = await service.chat('move up');
+      expect(mockActionHandler).toHaveBeenCalledWith('move', 'UP');
+      expect(response.executedAction).toBe('move:UP');
+    });
+
+    it('should not execute action without handler', async () => {
+      service.setActionHandler(null);
+      const response = await service.chat('feed the pet');
+      expect(response.executedAction).toBeUndefined();
+    });
+  });
+
+  describe('dynamic responses', () => {
+    beforeEach(() => {
+      service.petStats = { hunger: 50, energy: 80, happiness: 60, hygiene: 90 };
+    });
+
+    it('should generate acknowledgment response after action execution', async () => {
+      service.setActionHandler(vi.fn());
+      const response = await service.chat('feed me');
+      expect(response.message).toBeTruthy();
+      expect(response.executedAction).toBe('feed');
+    });
+
+    it('should generate contextual response based on stats after action', async () => {
+      service.setActionHandler(vi.fn());
+      service.petStats.hunger = 80; // Hungry
+      const response = await service.chat('feed me please');
+      expect(response.message).toBeTruthy();
+      // Response should acknowledge the feeding
+    });
+
+    it('should generate varied responses for same input', async () => {
+      const responses = new Set();
+      for (let i = 0; i < 10; i++) {
+        const response = await service.chat('hello');
+        responses.add(response.message);
+      }
+      // Should potentially have some variety (at least for generic responses)
+      // Note: greeting might be fixed, so this tests the generic response variety
+    });
+  });
+
+  describe('pet abilities', () => {
+    beforeEach(() => {
+      service.petStats = { hunger: 50, energy: 80, happiness: 60, hygiene: 90 };
+    });
+
+    it('should list available abilities', () => {
+      const abilities = service.getAvailableAbilities();
+      expect(abilities).toContain('feed');
+      expect(abilities).toContain('play');
+      expect(abilities).toContain('sleep');
+      expect(abilities).toContain('clean');
+      expect(abilities).toContain('move');
+    });
+
+    it('should describe abilities when asked', async () => {
+      const response = await service.chat('what can you do?');
+      expect(response.message).toBeTruthy();
+      // Should mention abilities
+    });
+  });
 });

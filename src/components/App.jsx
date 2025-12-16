@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import { useGame } from '../hooks/useGame.js';
 import { useChat } from '../hooks/useChat.js';
 import StatsPanel from './StatsPanel.jsx';
@@ -10,13 +10,23 @@ import ChatPanel from './ChatPanel.jsx';
 function App() {
   const canvasRef = useRef(null);
   const { stats, stage, age, isDead, wasAlive, actions } = useGame(canvasRef);
+  
+  // Memoize chat actions to prevent unnecessary re-renders
+  const chatActions = useMemo(() => ({
+    feed: actions.feed,
+    sleep: actions.sleep,
+    play: actions.play,
+    clean: actions.clean,
+    move: actions.move
+  }), [actions.feed, actions.sleep, actions.play, actions.clean, actions.move]);
+
   const { 
     messages, 
     isLoading, 
     isOpen, 
     sendMessage, 
     toggleOpen 
-  } = useChat(stats, stage);
+  } = useChat(stats, stage, chatActions);
 
   // Handle suggested actions from chat
   const handleSuggestedAction = useCallback((action) => {
