@@ -207,4 +207,79 @@ describe('Pet Entity', () => {
         expect(pet2.stats.hunger).toBe(50);
         expect(pet2.state).toBe('SLEEPING');
     });
+
+    // Aging logic tests (TDD)
+    describe('Aging', () => {
+        it('should start with age 0', () => {
+            const mockWorld = {};
+            const pet = new Pet(100, 100, mockWorld, mockSprites);
+            expect(pet.age).toBe(0);
+        });
+
+        it('should increment age over time', () => {
+            const mockWorld = {};
+            const pet = new Pet(100, 100, mockWorld, mockSprites);
+
+            // Simulate 1 second passing (1000ms delta)
+            pet.update(1000);
+            expect(pet.age).toBe(1);
+
+            // Simulate another 2 seconds
+            pet.update(2000);
+            expect(pet.age).toBe(3);
+        });
+
+        it('should not increment age when DEAD', () => {
+            const mockWorld = {};
+            const pet = new Pet(100, 100, mockWorld, mockSprites);
+            pet.age = 100;
+            pet.state = 'DEAD';
+
+            pet.update(1000);
+            expect(pet.age).toBe(100); // Age should not change
+        });
+
+        it('should return BABY stage for age < 300 seconds (5 mins)', () => {
+            const mockWorld = {};
+            const pet = new Pet(100, 100, mockWorld, mockSprites);
+            pet.age = 0;
+            expect(pet.getStage()).toBe('BABY');
+
+            pet.age = 299;
+            expect(pet.getStage()).toBe('BABY');
+        });
+
+        it('should return CHILD stage for age 300-899 seconds (5-15 mins)', () => {
+            const mockWorld = {};
+            const pet = new Pet(100, 100, mockWorld, mockSprites);
+            pet.age = 300;
+            expect(pet.getStage()).toBe('CHILD');
+
+            pet.age = 899;
+            expect(pet.getStage()).toBe('CHILD');
+        });
+
+        it('should return ADULT stage for age >= 900 seconds (15+ mins)', () => {
+            const mockWorld = {};
+            const pet = new Pet(100, 100, mockWorld, mockSprites);
+            pet.age = 900;
+            expect(pet.getStage()).toBe('ADULT');
+
+            pet.age = 1500;
+            expect(pet.getStage()).toBe('ADULT');
+        });
+
+        it('should serialize and deserialize age correctly', () => {
+            const mockWorld = {};
+            const pet = new Pet(100, 100, mockWorld, mockSprites);
+            pet.age = 500;
+
+            const data = pet.serialize();
+            expect(data.age).toBe(500);
+
+            const pet2 = new Pet(100, 100, mockWorld, mockSprites);
+            pet2.deserialize(data);
+            expect(pet2.age).toBe(500);
+        });
+    });
 });
