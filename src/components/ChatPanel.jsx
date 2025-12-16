@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { MessageCircle, Send, X, Sparkles, Bot, Cpu } from 'lucide-react';
+import { MessageCircle, Send, X, Sparkles, Bot, Cpu, Loader2 } from 'lucide-react';
 import { LLM_STATUS } from '../core/LLMService.js';
 
 function ChatPanel({ 
@@ -73,7 +73,7 @@ function ChatPanel({
     if (type === LLM_STATUS.INITIALIZING) {
       return (
         <div className="flex items-center gap-1 text-xs text-muted-foreground" title={message}>
-          <span className="animate-spin" aria-hidden="true">⏳</span>
+          <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
           <span className="sr-only">{message}</span>
         </div>
       );
